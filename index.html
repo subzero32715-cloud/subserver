@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SubWorld Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:#e5e7eb;color:#0f172a;height:100vh;display:flex;align-items:center;justify-content:center}
+#app{width:100%;max-width:1180px;height:680px;background:#f3f4f6;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column}
+.topbar{height:56px;background:linear-gradient(90deg,#111827,#1f2937);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid #111827}
+.logo{font-weight:800;font-size:20px;letter-spacing:.04em;color:#38bdf8}
+.logo span{color:#f97316}
+.topbar-right{margin-left:auto;font-size:13px;color:#e5e7eb;opacity:.8}
+.auth-container{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top,#1f2937 0,#020617 55%)}
+.auth-card{width:380px;background:#f9fafb;border-radius:16px;padding:24px 26px;border:1px solid #e5e7eb;box-shadow:0 18px 40px rgba(15,23,42,.6)}
+.auth-title{font-size:20px;font-weight:700;margin-bottom:4px;color:#111827}
+.auth-subtitle{font-size:13px;color:#6b7280;margin-bottom:18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;margin-bottom:4px;color:#374151}
+.field input{width:100%;padding:9px 10px;border-radius:9px;border:1px solid #d1d5db;background:#f9fafb;color:#111827;font-size:14px}
+.field input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 1px rgba(59,130,246,.4)}
+.btn-primary{width:100%;padding:9px 10px;border-radius:9px;border:none;background:linear-gradient(135deg,#3b82f6,#0ea5e9);color:#f9fafb;font-weight:700;font-size:14px;cursor:pointer;margin-top:6px}
+.btn-primary:active{transform:translateY(1px)}
+.auth-toggle{margin-top:14px;font-size:13px;text-align:center;color:#6b7280}
+.auth-toggle button{background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;font-weight:600}
+.auth-error{margin-top:8px;font-size:12px;color:#b91c1c;min-height:16px}
+.main{flex:1;display:none;background:#e5e7eb}
+.sidebar{width:230px;background:#f9fafb;border-right:1px solid #e5e7eb;padding:14px 10px;display:flex;flex-direction:column}
+.sidebar-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;margin:4px 8px 8px}
+.nav-item{display:flex;align-items:center;padding:8px 10px;border-radius:9px;font-size:14px;color:#111827;cursor:pointer;margin:2px 4px;border:1px solid transparent;transition:.08s}
+.nav-item span.icon{width:20px;text-align:center;margin-right:6px}
+.nav-item.active{background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #3b82f6;color:#1d4ed8}
+.nav-item.disabled{opacity:.45;cursor:default}
+.sidebar-footer{margin-top:auto;padding:8px;font-size:11px;color:#6b7280;border-top:1px solid #e5e7eb}
+.sidebar-username{font-weight:600;color:#111827}
+.logout-btn{margin-top:4px;font-size:11px;color:#b91c1c;cursor:pointer}
+.content{flex:1;background:#e5e7eb;padding:16px 18px;display:flex;flex-direction:column}
+.content-header{display:flex;align-items:center;margin-bottom:10px}
+.content-title{font-size:18px;font-weight:700;color:#111827}
+.content-subtitle{font-size:13px;color:#6b7280;margin-left:8px}
+.content-body{flex:1;border-radius:14px;border:1px solid #e5e7eb;background:#f9fafb;padding:14px;overflow:hidden;display:flex;flex-direction:column}
+.view{flex:1;overflow:auto}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.game-card{background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;cursor:pointer;transition:.08s;display:flex;flex-direction:column}
+.game-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,23,42,.18);border-color:#d1d5db}
+.game-thumb{width:100%;height:120px;background:linear-gradient(135deg,#0f172a,#1f2937);display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px}
+.game-thumb img{width:100%;height:100%;object-fit:cover}
+.game-info{padding:9px 10px;display:flex;flex-direction:column;gap:4px}
+.game-title{font-size:14px;font-weight:600;color:#111827}
+.game-desc{font-size:12px;color:#6b7280;max-height:32px;overflow:hidden;text-overflow:ellipsis}
+.game-meta{font-size:11px;color:#9ca3af}
+.game-actions{margin-top:4px;display:flex;justify-content:flex-end}
+.btn-small{font-size:11px;padding:4px 7px;border-radius:999px;border:1px solid #d1d5db;background:#f9fafb;color:#111827;cursor:pointer}
+.code-view{margin-top:6px;font-size:11px;background:#f3f4f6;border-radius:8px;border:1px solid #e5e7eb;padding:6px;white-space:pre-wrap;max-height:140px;overflow:auto;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+.form-row{margin-bottom:10px}
+.form-row label{display:block;font-size:13px;margin-bottom:4px;color:#374151}
+.form-row input,.form-row textarea{width:100%;padding:8px;border-radius:9px;border:1px solid #d1d5db;background:#ffffff;color:#111827}
+.form-row input:focus,.form-row textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 1px rgba(59,130,246,.35)}
+.form-row textarea{min-height:80px;max-height:260px;resize:vertical;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px}
+.btn-create{padding:8px 14px;border-radius:999px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#f9fafb;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px}
+.btn-create:active{transform:translateY(1px)}
+.back-wrapper{width:40px;height:40px;border-radius:12px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:12px;border:1px solid #e5e7eb}
+.back-inner{width:24px;height:24px;border-radius:50%;background:#d1d5db}
+#detailsThumb{width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-bottom:14px;display:block}
+#detailsPlayBtn{padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#f9fafb;font-weight:700;font-size:15px;cursor:pointer;margin-top:4px}
+#detailsPlayBtn:active{transform:translateY(1px)}
+#playFrame{width:100%;height:100%;border:none;background:#000;border-radius:12px}
+.empty-state{font-size:13px;color:#6b7280;text-align:center;padding:40px 10px}
+.empty-state strong{color:#111827}
+.details-header{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.details-title{font-size:18px;font-weight:700;color:#111827}
+.details-owner{font-size:12px;color:#9ca3af}
+.details-desc{font-size:13px;color:#4b5563;margin-bottom:10px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="app">
+    <div class="topbar">
+        <div class="logo">Sub<span>World</span></div>
+        <div class="topbar-right" id="topbarUser"></div>
+    </div>
+
+    <div class="auth-container" id="authView">
+        <div class="auth-card">
+            <div class="auth-title" id="authTitle">Sign in</div>
+            <div class="auth-subtitle" id="authSubtitle">Enter your username and password.</div>
+            <div class="field">
+                <label>Username</label>
+                <input id="authUsername">
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input id="authPassword" type="password">
+            </div>
+            <button class="btn-primary" id="authSubmitBtn">Sign in</button>
+            <div class="auth-toggle">
+                <span id="authToggleText">Don't have an account?</span>
+                <button id="authToggleBtn">Register</button>
+            </div>
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
+    <div class="main" id="mainView">
+        <div style="display:flex;height:100%;">
+            <div class="sidebar">
+                <div class="sidebar-section-title">Account</div>
+                <div class="nav-item disabled"><span class="icon">👤</span>Account</div>
+
+                <div class="sidebar-section-title">Explore</div>
+                <div class="nav-item active" data-view="games"><span class="icon">🎮</span>Games</div>
+                <div class="nav-item" data-view="make"><span class="icon">🛠️</span>Make game</div>
+
+                <div class="sidebar-section-title">Meta</div>
+                <div class="nav-item disabled"><span class="icon">💰</span>Subcoins</div>
+                <div class="nav-item disabled"><span class="icon">⚙️</span>Settings</div>
+
+                <div class="sidebar-footer">
+                    <div class="sidebar-username" id="sidebarUsername"></div>
+                    <div class="logout-btn" id="logoutBtn">Log out</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="content-header">
+                    <div class="content-title" id="contentTitle">Games</div>
+                    <div class="content-subtitle" id="contentSubtitle">Browse your games.</div>
+                </div>
+
+                <div class="content-body">
+                    <div id="gamesView" class="view">
+                        <div id="gamesList" class="games-grid"></div>
+                        <div id="gamesEmpty" class="empty-state" style="display:none;">
+                            <strong>No games yet.</strong><br>Click <strong>Make game</strong> to create one.
+                        </div>
+                    </div>
+
+                    <div id="makeView" class="view" style="display:none;">
+                        <div class="form-row">
+                            <label>Game title</label>
+                            <input id="gameTitle">
+                        </div>
+                        <div class="form-row">
+                            <label>Description</label>
+                            <textarea id="gameDesc" placeholder="Describe what your game is about..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Thumbnail</label>
+                            <input type="file" id="gameImage" accept="image/*">
+                        </div>
+                        <div class="form-row">
+                            <label>Game code</label>
+                            <textarea id="gameCode" placeholder="// Your game code here. Leave empty to start with the SubWorld Engine."></textarea>
+                        </div>
+                        <button class="btn-create" id="createGameBtn">Create game</button>
+                        <div id="makeStatus" style="margin-top:6px;font-size:12px;color:#16a34a;"></div>
+                    </div>
+
+                    <div id="detailsView" class="view" style="display:none;">
+                        <div id="detailsBackBtn" class="back-wrapper"><div class="back-inner"></div></div>
+                        <div class="details-header">
+                            <div class="details-title" id="detailsTitle"></div>
+                            <div class="details-owner" id="detailsOwner"></div>
+                        </div>
+                        <p class="details-desc" id="detailsDesc"></p>
+                        <img id="detailsThumb">
+                        <button id="detailsPlayBtn">Play</button>
+                    </div>
+
+                    <div id="playView" class="view" style="display:none;">
+                        <div id="playBackBtn" class="back-wrapper"><div class="back-inner"></div></div>
+                        <div style="flex:1;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+                            <iframe id="playFrame"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+let mode="login",currentUser=null,currentGame=null;
+
+const authView=document.getElementById("authView");
+const mainView=document.getElementById("mainView");
+const authTitle=document.getElementById("authTitle");
+const authSubtitle=document.getElementById("authSubtitle");
+const authUsername=document.getElementById("authUsername");
+const authPassword=document.getElementById("authPassword");
+const authSubmitBtn=document.getElementById("authSubmitBtn");
+const authToggleText=document.getElementById("authToggleText");
+const authToggleBtn=document.getElementById("authToggleBtn");
+const authError=document.getElementById("authError");
+
+const topbarUser=document.getElementById("topbarUser");
+const sidebarUsername=document.getElementById("sidebarUsername");
+const logoutBtn=document.getElementById("logoutBtn");
+
+const navItems=document.querySelectorAll(".nav-item[data-view]");
+const contentTitle=document.getElementById("contentTitle");
+const contentSubtitle=document.getElementById("contentSubtitle");
+
+const gamesView=document.getElementById("gamesView");
+const makeView=document.getElementById("makeView");
+const detailsView=document.getElementById("detailsView");
+const playView=document.getElementById("playView");
+
+const gamesList=document.getElementById("gamesList");
+const gamesEmpty=document.getElementById("gamesEmpty");
+
+const gameTitle=document.getElementById("gameTitle");
+const gameDesc=document.getElementById("gameDesc");
+const gameImage=document.getElementById("gameImage");
+const gameCode=document.getElementById("gameCode");
+const createGameBtn=document.getElementById("createGameBtn");
+const makeStatus=document.getElementById("makeStatus");
+
+const detailsBackBtn=document.getElementById("detailsBackBtn");
+const detailsTitle=document.getElementById("detailsTitle");
+const detailsOwner=document.getElementById("detailsOwner");
+const detailsDesc=document.getElementById("detailsDesc");
+const detailsThumb=document.getElementById("detailsThumb");
+const detailsPlayBtn=document.getElementById("detailsPlayBtn");
+
+const playBackBtn=document.getElementById("playBackBtn");
+const playFrame=document.getElementById("playFrame");
+
+const defaultEngine = `
+const canvas = document.createElement("canvas");
+document.body.style.margin = "0";
+document.body.style.background = "#050816";
+document.body.appendChild(canvas);
+
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+setTimeout(resize, 50);
+
+let keys = {};
+window.addEventListener("keydown", e => { keys[e.key] = true; });
+window.addEventListener("keyup", e => { keys[e.key] = false; });
+
+const world = {
+    tileSize: 40,
+    cols: 40,
+    rows: 22,
+    tiles: []
+};
+
+for (let y = 0; y < world.rows; y++) {
+    let row = [];
+    for (let x = 0; x < world.cols; x++) {
+        let edge = y === world.rows - 1 || y === 0 || x === 0 || x === world.cols - 1;
+        let platform = y === world.rows - 5 && x > 4 && x < 15;
+        let platform2 = y === world.rows - 9 && x > 18 && x < 30;
+        row.push(edge || platform || platform2 ? 1 : 0);
+    }
+    world.tiles.push(row);
+}
+
+function rectIntersect(a, b) {
+    return a.x < b.x + b.w &&
+           a.x + a.w > b.x &&
+           a.y < b.y + b.h &&
+           a.y + a.h > b.y;
+}
+
+function tileAtPixel(px, py) {
+    let tx = Math.floor(px / world.tileSize);
+    let ty = Math.floor(py / world.tileSize);
+    if (tx < 0 || ty < 0 || tx >= world.cols || ty >= world.rows) return 0;
+    return world.tiles[ty][tx];
+}
+
+let camera = { x: 0, y: 0 };
+
+let player = {
+    x: 80,
+    y: 80,
+    w: 28,
+    h: 36,
+    vx: 0,
+    vy: 0,
+    speed: 4,
+    jumpPower: 11,
+    onGround: false,
+    color: "#38bdf8"
+};
+
+let enemies = [
+    { x: 600, y: 80, w: 28, h: 32, vx: 1.2, dir: 1, range: 120, baseX: 600, color: "#f97373" },
+    { x: 1100, y: 80, w: 28, h: 32, vx: 1.6, dir: -1, range: 160, baseX: 1100, color: "#facc15" }
+];
+
+let coins = [];
+for (let i = 0; i < 10; i++) {
+    coins.push({
+        x: 200 + i * 80,
+        y: (world.rows - 6) * world.tileSize - 20,
+        r: 10,
+        collected: false
+    });
+}
+
+let hud = {
+    coins: 0,
+    timeStart: performance.now()
+};
+
+function moveAndCollide(entity, dx, dy) {
+    entity.x += dx;
+    if (dx !== 0) {
+        let left = entity.x;
+        let right = entity.x + entity.w;
+        let top = entity.y;
+        let bottom = entity.y + entity.h;
+        let step = world.tileSize / 2;
+        for (let py = top; py <= bottom; py += step) {
+            if (tileAtPixel(dx > 0 ? right : left, py)) {
+                entity.x = Math.floor((dx > 0 ? right : left) / world.tileSize) * world.tileSize;
+                if (dx > 0) entity.x -= entity.w + 0.01;
+                break;
+            }
+        }
+    }
+
+    entity.y += dy;
+    entity.onGround = false;
+    if (dy !== 0) {
+        let left = entity.x;
+        let right = entity.x + entity.w;
+        let top = entity.y;
+        let bottom = entity.y + entity.h;
+        let step = world.tileSize / 2;
+        for (let px = left; px <= right; px += step) {
+            if (tileAtPixel(px, dy > 0 ? bottom : top)) {
+                entity.y = Math.floor((dy > 0 ? bottom : top) / world.tileSize) * world.tileSize;
+                if (dy > 0) {
+                    entity.y -= entity.h + 0.01;
+                    entity.onGround = true;
+                    entity.vy = 0;
+                } else {
+                    entity.vy = 0;
+                }
+                break;
+            }
+        }
+    }
+}
+
+function update(dt) {
+    let ax = 0;
+    if (keys["ArrowLeft"] || keys["a"]) ax -= 1;
+    if (keys["ArrowRight"] || keys["d"]) ax += 1;
+
+    player.vx = ax * player.speed;
+
+    if ((keys["ArrowUp"] || keys["w"] || keys[" "]) && player.onGround) {
+        player.vy = -player.jumpPower;
+        player.onGround = false;
+    }
+
+    player.vy += 0.6;
+    if (player.vy > 18) player.vy = 18;
+
+    moveAndCollide(player, player.vx, player.vy);
+
+    enemies.forEach(e => {
+        e.x += e.vx * e.dir;
+        if (Math.abs(e.x - e.baseX) > e.range) {
+            e.dir *= -1;
+        }
+        let tileBelow = tileAtPixel(e.x + e.w / 2, e.y + e.h + 2);
+        if (!tileBelow) {
+            e.dir *= -1;
+        }
+    });
+
+    enemies.forEach(e => {
+        if (rectIntersect(
+            { x: player.x, y: player.y, w: player.w, h: player.h },
+            { x: e.x, y: e.y, w: e.w, h: e.h }
+        )) {
+            player.x = 80;
+            player.y = 80;
+            player.vx = 0;
+            player.vy = 0;
+            hud.coins = 0;
+            coins.forEach(c => c.collected = false);
+        }
+    });
+
+    coins.forEach(c => {
+        if (c.collected) return;
+        let dx = (c.x - (player.x + player.w / 2));
+        let dy = (c.y - (player.y + player.h / 2));
+        if (Math.sqrt(dx * dx + dy * dy) < c.r + 18) {
+            c.collected = true;
+            hud.coins++;
+        }
+    });
+
+    camera.x = player.x - canvas.width / 2 + player.w / 2;
+    camera.y = player.y - canvas.height / 2 + player.h / 2;
+}
+
+function drawWorld() {
+    let ts = world.tileSize;
+    let startCol = Math.floor(camera.x / ts) - 1;
+    let endCol = Math.floor((camera.x + canvas.width) / ts) + 1;
+    let startRow = Math.floor(camera.y / ts) - 1;
+    let endRow = Math.floor((camera.y + canvas.height) / ts) + 1;
+
+    for (let y = startRow; y <= endRow; y++) {
+        if (y < 0 || y >= world.rows) continue;
+        for (let x = startCol; x <= endCol; x++) {
+            if (x < 0 || x >= world.cols) continue;
+            if (world.tiles[y][x] === 1) {
+                let sx = x * ts;
+                let sy = y * ts;
+                ctx.fillStyle = "#111827";
+                ctx.fillRect(sx, sy, ts, ts);
+                ctx.strokeStyle = "#1f2937";
+                ctx.strokeRect(sx, sy, ts, ts);
+            }
+        }
+    }
+}
+
+function drawPlayer() {
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+}
+
+function drawEnemies() {
+    enemies.forEach(e => {
+        ctx.fillStyle = e.color;
+        ctx.fillRect(e.x, e.y, e.w, e.h);
+    });
+}
+
+function drawCoins() {
+    coins.forEach(c => {
+        if (c.collected) return;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fillStyle = "#facc15";
+        ctx.fill();
+        ctx.strokeStyle = "#854d0e";
+        ctx.stroke();
+    });
+}
+
+function drawHUD() {
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = "rgba(15,23,42,0.85)";
+    ctx.fillRect(12, 12, 190, 60);
+    ctx.fillStyle = "#e5e7eb";
+    ctx.font = "14px system-ui";
+    ctx.fillText("SubWorld Engine", 22, 32);
+    ctx.fillStyle = "#facc15";
+    ctx.fillText("Coins: " + hud.coins, 22, 52);
+    let t = ((performance.now() - hud.timeStart) / 1000).toFixed(1);
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText("Time: " + t + "s", 110, 52);
+    ctx.restore();
+}
+
+let last = performance.now();
+function loop(now) {
+    let dt = (now - last) / 16.67;
+    if (dt > 2) dt = 2;
+    last = now;
+
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = "#020617";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.translate(-camera.x, -camera.y);
+
+    drawWorld();
+    drawCoins();
+    drawEnemies();
+    drawPlayer();
+    drawHUD();
+
+    requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+`;
+
+function loadUsers(){return JSON.parse(localStorage.getItem("subworld_users")||"{}")}
+function saveUsers(u){localStorage.setItem("subworld_users",JSON.stringify(u))}
+function loadGames(){return JSON.parse(localStorage.getItem("subworld_games")||"{}")}
+function saveGames(g){localStorage.setItem("subworld_games",JSON.stringify(g))}
+
+function switchMode(m){
+    mode=m;
+    authError.textContent="";
+    if(m==="login"){
+        authTitle.textContent="Sign in";
+        authSubtitle.textContent="Enter your username and password.";
+        authSubmitBtn.textContent="Sign in";
+        authToggleText.textContent="Don't have an account?";
+        authToggleBtn.textContent="Register";
+    }else{
+        authTitle.textContent="Register";
+        authSubtitle.textContent="Create a new account.";
+        authSubmitBtn.textContent="Create account";
+        authToggleText.textContent="Already have an account?";
+        authToggleBtn.textContent="Sign in";
+    }
+}
+
+authToggleBtn.onclick=()=>switchMode(mode==="login"?"register":"login");
+
+authSubmitBtn.onclick=()=>{
+    let u=authUsername.value.trim().toLowerCase();
+    let p=authPassword.value;
+    if(!u||!p){authError.textContent="Missing fields.";return}
+    let users=loadUsers();
+    if(mode==="register"){
+        if(users[u]){authError.textContent="Username taken.";return}
+        users[u]={password:p};
+        saveUsers(users);
+        currentUser=u;
+        enterMain();
+    }else{
+        if(!users[u]||users[u].password!==p){authError.textContent="Invalid login.";return}
+        currentUser=u;
+        enterMain();
+    }
+};
+
+function enterMain(){
+    authView.style.display="none";
+    mainView.style.display="block";
+    topbarUser.textContent="@"+currentUser;
+    sidebarUsername.textContent=currentUser;
+    setActiveView("games");
+    renderGames();
+}
+
+logoutBtn.onclick=()=>{
+    currentUser=null;
+    authUsername.value="";
+    authPassword.value="";
+    switchMode("login");
+    mainView.style.display="none";
+    authView.style.display="flex";
+};
+
+function showView(v){
+    gamesView.style.display="none";
+    makeView.style.display="none";
+    detailsView.style.display="none";
+    playView.style.display="none";
+    v.style.display="block";
+}
+
+function setActiveView(v){
+    navItems.forEach(i=>i.classList.remove("active"));
+    document.querySelector('.nav-item[data-view="'+v+'"]').classList.add("active");
+    if(v==="games"){
+        contentTitle.textContent="Games";
+        contentSubtitle.textContent="Browse your games.";
+        showView(gamesView);
+        renderGames();
+    }else{
+        contentTitle.textContent="Make game";
+        contentSubtitle.textContent="Create a new experience.";
+        showView(makeView);
+    }
+}
+
+navItems.forEach(i=>{
+    if(i.classList.contains("disabled"))return;
+    i.onclick=()=>setActiveView(i.dataset.view);
+});
+
+function renderGames(){
+    if(!currentUser){gamesList.innerHTML="";gamesEmpty.style.display="block";return}
+    let g=loadGames()[currentUser]||[];
+    gamesList.innerHTML="";
+    if(!g.length){gamesEmpty.style.display="block";return}
+    gamesEmpty.style.display="none";
+    g.forEach(game=>{
+        let card=document.createElement("div");
+        card.className="game-card";
+
+        let thumb=document.createElement("div");
+        thumb.className="game-thumb";
+        if(game.imageDataUrl){
+            let img=document.createElement("img");
+            img.src=game.imageDataUrl;
+            thumb.appendChild(img);
+        }else thumb.textContent="No thumbnail";
+
+        let info=document.createElement("div");
+        info.className="game-info";
+
+        let title=document.createElement("div");
+        title.className="game-title";
+        title.textContent=game.title;
+
+        let desc=document.createElement("div");
+        desc.className="game-desc";
+        desc.textContent=game.description||"No description yet.";
+
+        let meta=document.createElement("div");
+        meta.className="game-meta";
+        meta.textContent="Owner: @"+currentUser;
+
+        let actions=document.createElement("div");
+        actions.className="game-actions";
+
+        let viewCodeBtn=document.createElement("button");
+        viewCodeBtn.className="btn-small";
+        viewCodeBtn.textContent="View code";
+
+        let codeView=document.createElement("div");
+        codeView.className="code-view";
+        codeView.style.display="none";
+        codeView.textContent=game.code;
+
+        viewCodeBtn.addEventListener("click",e=>{
+            e.stopPropagation();
+            codeView.style.display=codeView.style.display==="none"?"block":"none";
+            viewCodeBtn.textContent=codeView.style.display==="none"?"View code":"Hide code";
+        });
+
+        actions.appendChild(viewCodeBtn);
+
+        info.appendChild(title);
+        info.appendChild(desc);
+        info.appendChild(meta);
+        info.appendChild(actions);
+        info.appendChild(codeView);
+
+        card.appendChild(thumb);
+        card.appendChild(info);
+
+        card.addEventListener("click",()=>openDetails(game));
+
+        gamesList.appendChild(card);
+    });
+}
+
+createGameBtn.onclick=()=>{
+    if(!currentUser)return;
+    let title=gameTitle.value.trim();
+    let desc=gameDesc.value.trim();
+    let code=gameCode.value;
+    let file=gameImage.files[0];
+    if(!title){makeStatus.style.color="#b91c1c";makeStatus.textContent="Please enter a title.";return}
+
+    if(!code.trim()){
+        code=defaultEngine.trim();
+    }
+
+    function save(imageDataUrl){
+        let games=loadGames();
+        if(!games[currentUser])games[currentUser]=[];
+        games[currentUser].push({
+            title:title,
+            description:desc,
+            code:code,
+            imageDataUrl:imageDataUrl||null,
+            createdAt:Date.now()
+        });
+        saveGames(games);
+        gameTitle.value="";
+        gameDesc.value="";
+        gameCode.value="";
+        gameImage.value="";
+        makeStatus.style.color="#16a34a";
+        makeStatus.textContent="Game created.";
+        renderGames();
+    }
+
+    if(file){
+        let reader=new FileReader();
+        reader.onload=e=>save(e.target.result);
+        reader.readAsDataURL(file);
+    }else save(null);
+};
+
+function openDetails(game){
+    currentGame=game;
+    detailsTitle.textContent=game.title;
+    detailsOwner.textContent="Owner: @"+currentUser;
+    detailsDesc.textContent=game.description||"No description yet.";
+    if(game.imageDataUrl){
+        detailsThumb.src=game.imageDataUrl;
+        detailsThumb.style.display="block";
+    }else{
+        detailsThumb.style.display="none";
+    }
+    contentTitle.textContent="Game details";
+    contentSubtitle.textContent="View info and play.";
+    showView(detailsView);
+}
+
+detailsBackBtn.onclick=()=>{
+    if(confirm("Return home?"))setActiveView("games");
+};
+
+detailsPlayBtn.onclick=()=>{
+    if(!currentGame)return;
+    openPlay(currentGame);
+};
+
+function openPlay(game){
+    let safeCode = (game.code||"").replace(/<\/script/gi,"<\\/script");
+    let html = `
+    <html>
+    <body style="margin:0;overflow:hidden;background:black;color:white;">
+    <script>
+    try {
+        ${safeCode}
+    } catch(e) {
+        document.body.innerHTML = '<div style="color:white;padding:16px;font-family:sans-serif;">Error: ' + e.message + '</div>';
+    }
+    <\\/script>
+    </body>
+    </html>
+    `;
+    playFrame.srcdoc = html;
+    contentTitle.textContent = game.title;
+    contentSubtitle.textContent = "Playing game.";
+    showView(playView);
+}
+
+playBackBtn.onclick=()=>{
+    if(confirm("Return home?"))setActiveView("games");
+};
+
+switchMode("login");
+})();
+</script>
+</body>
+</html>
